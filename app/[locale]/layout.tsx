@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Link from 'next/link'
 import Image from 'next/image'
+import {FC,  ReactNode} from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,11 +19,29 @@ const navLinks = [
   { href: '/contacts', title: 'Contacts' },
 ];
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+import {NextIntlClientProvider} from 'next-intl';
+import {notFound} from 'next/navigation';
+ 
+export function generateStaticParams() {
+  return [{locale: 'en'}, {locale: 'de'}];
+}
+ 
+export default async function RootLayout({children, params: {locale}}) {
+
+  console.log(locale)
+
+  let messages;
+  try {
+    messages = (await import(`../../messages/${locale}.json`)).default;
+  } catch (error) {
+    notFound();
+  }
+ 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className={inter.className}>
-      <nav className="w-full p-4">
+        <NextIntlClientProvider locale={locale} messages={messages}>
+        <nav className="w-full p-4">
       <div className="max-w-screen-xl flex justify-around">
         <Link href="/" className="flex items-center">
           <Image src="/logo-white.png" width={120} height="120" alt="Pirtsslotas Logo" />
@@ -35,7 +54,8 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       </div>
       </nav>
         {children}
-        </body>
+        </NextIntlClientProvider>
+      </body>
     </html>
-  )
+  );
 }
